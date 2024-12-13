@@ -43,18 +43,16 @@ CREATE TABLE Azioni(
 	PRIMARY KEY (ID),
 	FOREIGN KEY (ID_Utente) REFERENCES Utenti(ID) ON DELETE CASCADE,
 	FOREIGN KEY (ID_Risorsa) REFERENCES Risorse(ID),
-	CHECK(Quantità > 0 AND (DataOraFine IS NULL OR DataOraFine > DataOraAcquisto))
+	CHECK(Quantità >= 0 AND (DataOraFine IS NULL OR DataOraFine > DataOraAcquisto))
 );
 
 DELIMITER //
-CREATE TRIGGER `azioni_after_update` 
-AFTER UPDATE ON `azioni` 
+CREATE TRIGGER `azioni_before_update` 
+BEFORE UPDATE ON `azioni` 
 FOR EACH ROW 
 BEGIN
     IF NEW.Quantità = 0 THEN
-        UPDATE `azioni` 
-        SET DataOraFine = CURRENT_TIMESTAMP()
-        WHERE ID = NEW.ID;
+        SET NEW.DataOraFine = CURRENT_TIMESTAMP();
     END IF;
 END//
 DELIMITER ;

@@ -35,15 +35,26 @@ CREATE TABLE Quotazioni(
 
 CREATE TABLE Azioni(
 	ID INT NOT NULL AUTO_INCREMENT,
-	DataOraAcquisto TIMESTAMP NOT NULL DEFAULT NOW(),
+	DataOraAcquisto TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(),
 	Quantità DECIMAL(12,4) NOT NULL,
-	ValoreUnitarioAcquisto DECIMAL(12,4) NOT NULL,
 	DataOraFine TIMESTAMP NULL DEFAULT NULL, # devo forzare null come valore
-	Finita BOOL DEFAULT FALSE,
 	ID_Utente INT NOT NULL,
 	ID_Risorsa INT NOT NULL,
 	PRIMARY KEY (ID),
 	FOREIGN KEY (ID_Utente) REFERENCES Utenti(ID) ON DELETE CASCADE,
 	FOREIGN KEY (ID_Risorsa) REFERENCES Risorse(ID),
-	CHECK(ValoreUnitarioAcquisto > 0 AND Quantità > 0 AND (DataOraFine IS NULL OR DataOraFine > DataOraAcquisto))
+	CHECK(Quantità > 0 AND (DataOraFine IS NULL OR DataOraFine > DataOraAcquisto))
 );
+
+DELIMITER //
+CREATE TRIGGER `azioni_after_update` 
+AFTER UPDATE ON `azioni` 
+FOR EACH ROW 
+BEGIN
+    IF NEW.Quantità = 0 THEN
+        UPDATE `azioni` 
+        SET DataOraFine = CURRENT_TIMESTAMP()
+        WHERE ID = NEW.ID;
+    END IF;
+END//
+DELIMITER ;
